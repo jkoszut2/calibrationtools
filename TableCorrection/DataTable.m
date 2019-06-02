@@ -31,4 +31,4 @@ for i = 2:length(Fuelx)
     end
 end
 
-set(gcf, 'position', [1 42 1400 645]);
+set(gcf, 'position', [1 42 1600 750]);
