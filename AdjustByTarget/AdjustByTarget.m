@@ -1,41 +1,4 @@
-clc;
-clear all;
-
-%Select Working Directory
-stop = 1;
-answer = questdlg('Use Default Directory?', 'Directory Selection', 'Yes', 'No', 'Stop','Yes');
-switch answer
-    case 'Yes'
-        stop = 0;
-        dir_Target = 'C:\Users\Demo\Desktop\EngineMATLAB\MoTeC\FuelMapAutoAdjust\Targets';
-    case 'No'
-        stop = 0;
-        dir_Target = uigetdir(path,'Select Lambda Target Directory');
-    case 'Stop'
-        stop = 1;
-    cd(dir_Target);
-end
-
-%Get Fuel Table
-cd(dir_Target);
-Table_IJPU = uigetfile('*.csv','Select MoTeC Fuel Table to Modify');
-tablefilename = Table_IJPU;
-Table_IJPU = readtable(tablefilename);
-Table_IJPU = table2cell(Table_IJPU); %Table to cell array
-
-%Get Target Tables
-cd(dir_Target);
-%Original Target Table
-Table_Target_Original = uigetfile('*.csv','Select Fuel Table Original Lambda Target');
-target1filename = Table_Target_Original;
-Table_Target_Original = readtable(target1filename);
-Table_Target_Original = table2cell(Table_Target_Original); %Table to cell array
-%New Target Table
-Table_Target_New = uigetfile('*.csv','Select Fuel Table New Lambda Target');
-target2filename = Table_Target_New;
-Table_Target_New = readtable(target2filename);
-Table_Target_New = table2cell(Table_Target_New); %Table to cell array
-
+%% Calculations
 %IJPU Table Size
 tableijpudatasize = size(Table_IJPU);
 cols_Table_IJPU = tableijpudatasize(1,2);
@@ -95,7 +58,8 @@ Table_Target_New_Precise_Final = zeros(rows_Table_IJPU_new, cols_Table_IJPU_new)
 Table_Target_New_Precise_Final(1,1:cols_Table_IJPU_new) = Table_IJPU_double(1,1:cols_Table_IJPU_new);
 Table_Target_New_Precise_Final(1:rows_Table_IJPU_new,1) = Table_IJPU_double(1:rows_Table_IJPU_new,1);
 Table_Target_New_Precise_Final(6:rows_Table_IJPU_new,10:cols_Table_IJPU_new) = Table_Target_New_Precise;
-        
+
+% Create new fuel table matrix
 Table_New = Table_IJPU_double;
 for i = 10:cols_Table_IJPU_new
     for j = 6:rows_Table_IJPU_new
@@ -103,13 +67,13 @@ for i = 10:cols_Table_IJPU_new
     end
 end
 
-
-copyfile(tablefilename, strcat(char('NEW_LT_'), tablefilename))
-newfile = strcat(char('NEW_LT_'), tablefilename);
+% Create new fuel table file
+cd(dir_Fuel);
+copyfile(tablefilename, strcat(char('NEW_ABT_'), tablefilename))
+newfilename = strcat(char('NEW_ABT_'), tablefilename);
 sheetcols = {'B'; 'C'; 'D'; 'E'; 'F'; 'G'; 'H'; 'I'; 'J'; 'K'; 'L'; 'M'; 'N'; 'O'; 'P'; 'Q'; 'R'; 'S'; 'T'; 'U'; 'V'; 'W'; 'X'; 'Y'; 'Z'; 'AA'; 'AB'; 'AC'; 'AD'; 'AE'; 'AF'; 'AG'; 'AH'; 'AI'; 'AJ'; 'AK'; 'AL'; 'AM'; 'AN'; 'AO';};
 cellrange = strcat(strcat(sheetcols(1), num2str(3+2)),{':'},strcat(sheetcols(40), num2str(3+23)));
-xlswrite(newfile, round(Table_New(2:rows_Table_IJPU_new,2:cols_Table_IJPU_new),1), 1, char(cellrange));
-
+xlswrite(newfilename, round(Table_New(2:rows_Table_IJPU_new,2:cols_Table_IJPU_new),1), 1, char(cellrange));
 
 %Plot Settings
 fontsz = 8;
