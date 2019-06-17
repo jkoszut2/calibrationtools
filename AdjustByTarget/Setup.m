@@ -34,7 +34,7 @@ catch ME
     error('>> Script terminated.');
 end
 
-prompt = ['>> USER: Enter path to fuel table directory: ' current_drive '\'];
+prompt = ['>> USER: Enter path to target table directory: ' current_drive '\'];
 dir_Target = input(prompt,'s');
 dir_Target = fullfile(current_drive,dir_Target);
 
