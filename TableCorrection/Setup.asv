@@ -6,7 +6,7 @@ format shortG
 %Set Working Directory
 stop = 1;
 
-dir_Main = pwd;
+dir_Main = '..\TableCorrection';
 
 try
     cd(dir_Main);
@@ -21,28 +21,23 @@ dir_Fuel = '..\TableCorrection\FuelTables';
 
 try
     cd(dir_Fuel);
-    dir_Fuel = pwd;
     fprintf('>> Fuel table directory exists!\n');
 catch ME
-    fprintf('>> Fuel table directory does not exist!\n');
+    fprintf('>> Path does not exist!\n');
     input('>> USER: Press enter to exit...');
     error('>> Script terminated.');
-end
+endc
 
-cd(dir_Main);
 dir_Log = '..\TableCorrection\Logs';
 
 try
     cd(dir_Log);
-    dir_Log = pwd;
-    fprintf('>> Logs directory exists!\n');
+    fprintf('>> Path exists!\n');
 catch ME
-    fprintf('>> Logs directory does not exist!\n');
+    fprintf('>> Path does not exist!\n');
     input('>> USER: Press enter to exit...');
     error('>> Script terminated.');
 end
-
-cd(dir_Main);
 
 %%
 %Import Files
@@ -58,12 +53,12 @@ switch answer
         stop = 1;
 end
 
-if stop == 1
-    error('Script Terminated')
-end
-
 cd(dir_Main);
 %Check if Files in Correct Format
 %sdf
 
 fprintf('>> Files Imported...\n')
+
+if stop == 1
+    error('Script Terminated')
+end

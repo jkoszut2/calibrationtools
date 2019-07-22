@@ -866,9 +866,7 @@ hax4 = axes('Parent', htab4);
 %Plot Default Filter Counts
 subplot(2,2,1)
 % Create loop to make below be dynamic
-count_default = [935; 538; 1658; 1972; 19; 11; 4517; 18; 2469; 11666; 2284; 18; 1359];
-bar(count_default');
-title('Default Filters')
+count_default = (935; 538; 1658; 1972; 19; 11; 4517; 18;2469;11666;2284;18;1359);
 % count_names = {'count_AE'; 'count_DE'; 'count_et'; 'count_gfp'; 'count_lambda';...
 %     'count_offset'; 'count_offset_AEDE'; 'count_tp'; 'count_rpm'; 'count_rpmdot';...
 %     'count_start'; 'count_tp'; 'count_tpdot'};
@@ -880,10 +878,13 @@ set(gca,'xticklabel',count_names);
 xtickangle(90)
 grid on
 
-% Plot User Filter Counts
-subplot(2,2,2)
+% Plot Basic Filter Counts
+subplot(2,2,1)
 bar(count_all');
-title('Basic Filters')
+% count_names = {'count_AE'; 'count_DE'; 'count_et'; 'count_gfp'; 'count_lambda';...
+%     'count_offset'; 'count_offset_AEDE'; 'count_tp'; 'count_rpm'; 'count_rpmdot';...
+%     'count_start'; 'count_tp'; 'count_tpdot'};
+% set(gca,'TickLabelInterpreter','none')
 set(gca,'xticklabel',count_names);
 xtickangle(90)
 grid on
