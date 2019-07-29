@@ -126,6 +126,7 @@ Variable_DE = find(strcmpi(LoggedData.Properties.VariableNames,'FuelDecel'));
 Variable_StartComp = find(strcmpi(LoggedData.Properties.VariableNames, 'FuelStartingComp'));
 Variable_La1ST = find(strcmpi(LoggedData.Properties.VariableNames,'La1ShortTrim'));
 Variable_La1LT = find(strcmpi(LoggedData.Properties.VariableNames,'La1LongTrim'));
+Variable_WSSFL = find(strcmpi(LoggedData.Properties.VariableNames,'GroundSpeedLeft'));
 
 SPS = 1/(LoggedData3(5,Variable_Time)-LoggedData3(4,Variable_Time)); %Sampling frequency
 Transient_Offset = round(Lim_Transient_Offset * SPS); %Sample offset to remove transients
@@ -816,9 +817,9 @@ set(hLine2,'color', 'b');
 xlabel('Time (s)')
 ylabel(axh(1),'RPM','HorizontalAlignment','left','VerticalAlignment','bottom');
 ylabel(axh(2),'Pressure (bar)', 'rotation', 270, 'HorizontalAlignment','left','VerticalAlignment','bottom');
-set(axh(1),'YLim',[-15000 15000], 'YColor', 'r')
+set(axh(1),'YLim',[-15000 15000], 'YColor', 'k')
 set(axh(1),'YTick',[000:2000:14000])
-set(axh(2),'YLim',[0 2], 'YColor', 'b')
+set(axh(2),'YLim',[0 2], 'YColor', 'k')
 set(axh(2),'YTick',[0:0.2:1])
 yt=get(axh(1),'YTick');
 set(axh(1),'YTickLabel',sprintf('%1.0f\n',yt))
@@ -844,7 +845,7 @@ graph_temps_LineWidth = 2;
 set(hLine1, 'LineWidth', graph_temps_LineWidth);
 set(hLine2, 'LineWidth', graph_temps_LineWidth);
 set(hLine1,'color', 'b');
-set(hLine2,'color', 'c');
+set(hLine2,'color', [0.39216 0.83137 0.07451]);
 xlabel('Time (s)')
 ylabel('Temperature (C)')
 ylabel(axh(2),'Temperature (C)', 'rotation', 270, 'HorizontalAlignment','center','VerticalAlignment','bottom');
@@ -852,16 +853,99 @@ hold(axh(1), 'on');
 hLine3 = plot(LoggedData3(:,Variable_Time),LoggedData3(:,Variable_OT));
 hLine3.LineWidth = graph_temps_LineWidth;
 set(hLine3, 'color', 'r')
+hLine4 = yline(Lim_EngineTemp(2), ':', 'LineWidth', 2, 'Color', [0.65 0.65 0.65]);
+set(axh(1),'YLim',[0 ceil(max(max(LoggedData3(:,[Variable_ET Variable_OT])))/20)*20*1.1])
+set(axh(2),'YLim',[0 max(max(LoggedData3(:,[Variable_FT])))*1.1])
+set(axh(1),'YTick',[0:20:ceil(max(max(LoggedData3(:,[Variable_ET Variable_OT])))/20)*20])
+set(axh(2),'YTick',[0:10:ceil(max(max(LoggedData3(:,[Variable_FT])))/10)*10])
+set(axh(1),'Box','off')
+hAx(2).XAxis.Visible = 'on';
+topline = refline(axh(1),0,axh(1).YLim(2));
+topline.LineWidth = 2;
+topline.Color = 'k';
+axh(1).YAxis.LineWidth = 2;
+axh(2).YAxis.LineWidth = 2;
 grid on
-legend('Water', 'Oil', 'Fuel', 'Location', 'SouthEast')
+ax = gca;
+ax.GridAlpha = 1;  % 0 = Transparent 1 = Opaque
+ax.GridLineStyle = ':';
+legend([hLine1 hLine3 hLine2 hLine4], 'Water', 'Oil', 'Fuel', 'Water Threshold', 'Location', 'SouthEast')
 %Set Border Width
 ax = gca;
 ax.XRuler.Axle.LineWidth = plot_borderwidth;
 ax.YRuler.Axle.LineWidth = plot_borderwidth;
 
+
 % Introduce Tab #5
-htab4 = uitab(htabgroup, 'Title', 'Statistics');
-hax4 = axes('Parent', htab4);
+htab5 = uitab(htabgroup, 'Title', 'Fuel Efficiency');
+hax5 = axes('Parent', htab5);
+
+%Plot Default Filter Counts
+cd(dir_Log);
+A = readtable(logfilename);
+Data = A.Variables;
+Names = A.Properties.VariableNames;
+rows = size(Data);
+rows = rows(1,1);
+cols = size(Data);
+cols = cols(1,2);
+
+FormattedData = [];
+for i = 1:cols
+    Name = Names{i}; %Store name of each column in array
+    FormattedData(:,i) = str2double(Data(:,i)); %Convert table to array
+end
+
+Time = find(strcmpi(A.Properties.VariableNames,'Time')); %Finds column of time data
+RPM = find(strcmpi(A.Properties.VariableNames,'EngineRPM')); %Finds column of rpm data
+FEPW = find(strcmpi(A.Properties.VariableNames,'FuelEffectivePW')); %Finds column of fuel data
+SPS = 1/(FormattedData(5,Time)-FormattedData(4,Time)); %Sampling frequency
+
+MPG = [zeros(rows,1)];
+if FEPW ~= 0
+    FormattedData(:, cols+1) = FormattedData(:,RPM)/60/2/SPS.*FormattedData(:,FEPW)/1000/60*220/1000*4; %Fuel usage in liters per sample
+    FormattedData = [FormattedData zeros(rows,1)]; %Sets up zeros column at end of array
+    for a = 2:rows
+        if FormattedData(a,Variable_Lambda) < 5.2 %Set variable for max lambda reading
+            FormattedData(a,cols+2) = double(FormattedData(a-1,cols+2)) + double(FormattedData(a, cols+1));
+        else % Do NOT add calculated fuel usage
+            FormattedData(a,cols+2) = double(FormattedData(a-1,cols+2));
+        end
+        if FormattedData(a,Variable_RPM) > 1500 && FormattedData(a,Variable_WSSFL) > 1
+            consumption = FormattedData(a,cols+1) * 60 * SPS; % liters/hour
+            speed = (Variable_WSSFL/1.6); % miles/hour
+            fuelecon = speed / consumption / 3.785; % miles/gallon
+            MPG(a,1) = fuelecon;
+        end
+    end
+%     set(gcf, 'position', [10 50 1400 0750]);
+else
+    disp('Error: Fuel pulse width not logged. Adjust data logging parameters to include FEPW.')
+end
+cd(dir_Main);
+subplot(3,3,[1 3])
+plot(FormattedData(:,Time), FormattedData(:,cols+2));
+title('Time vs Fuel Used');
+xlabel('Time')
+ylabel('Fuel Used')
+grid on
+subplot(3,3,[4 6])
+plot(FormattedData(:,Time), MPG(:,1));
+title('Time vs Fuel Economy');
+xlabel('Time')
+ylabel('Fuel Economy (MPG)')
+ylim([0 100])
+grid on
+subplot(3,3,[7 9])
+plot(FormattedData(:,Time), FormattedData(:, RPM));
+title('Time vs RPM');
+xlabel('Time')
+ylabel('RPM')
+grid on
+
+% Introduce Tab #6
+htab6 = uitab(htabgroup, 'Title', 'Statistics');
+hax6 = axes('Parent', htab6);
 
 %Plot Default Filter Counts
 subplot(2,2,1)
@@ -887,6 +971,7 @@ title('Basic Filters')
 set(gca,'xticklabel',count_names);
 xtickangle(90)
 grid on
+
 
 
 % Remove and replace with fill screen / autosize
