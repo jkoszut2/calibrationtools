@@ -72,7 +72,7 @@ switch answer
         time_constant_throttle = 0.15;
         time_constant_rpm = 1.5; % 0.5
     case ''
-        fprintf('>> Terminated Script\n')
+        fprintf('>> User Terminated Script\n')
         return
 end
 
@@ -207,156 +207,158 @@ count_offset = 0;
 count_offset_AEDE = 0;
 count_offset_TP = 0;
 
-LoggedData4 = [];
-for k = 1:rows_LoggedData
-    checksum = 0;
-    if length(find(LoggedData3(k,Variable_RPM) >= Lim_RPM(1) & LoggedData3(k,Variable_RPM) <= Lim_RPM(2))) == 1
-    else
-        count_rpm = count_rpm + 1;
-        checksum = checksum + 1;
+processFast = 0; %Actually does nothing... Why???
+LoggedData4 = NaN(rows_LoggedData,1);
+if processFast ~=1
+    for k = 1:rows_LoggedData
+        checksum = 0;
+        if length(find(LoggedData3(k,Variable_RPM) >= Lim_RPM(1) & LoggedData3(k,Variable_RPM) <= Lim_RPM(2))) == 1
+        else
+            count_rpm = count_rpm + 1;
+            checksum = checksum + 1;
+        end
+        if length(find(LoggedData3(k,Variable_Lambda) >= Lim_Lambda(1) & LoggedData3(k,Variable_Lambda) <= Lim_Lambda(2))) == 1   
+        else
+            count_lambda = count_lambda + 1;
+            checksum = checksum + 1;
+        end
+        if length(find(LoggedData3(k,Variable_ET) >= Lim_EngineTemp(1) & LoggedData3(k,Variable_ET) <= Lim_EngineTemp(2))) == 1
+        else
+            count_et = count_et + 1;
+            checksum = checksum + 1;
+        end
+        if length(find(LoggedData3(k,Variable_GFP) >= Lim_FuelPressure_Gauge(1) & LoggedData3(k,Variable_GFP) <= Lim_FuelPressure_Gauge(2))) == 1
+        else
+            count_gfp = count_gfp + 1;
+            checksum = checksum + 1;
+        end
+        if length(find(LoggedData3(k,Variable_TP) >= Lim_TP(1) & LoggedData3(k,Variable_TP) <= Lim_TP(2))) == 1
+        else
+            count_tp = count_tp + 1;
+            checksum = checksum + 1;
+        end
+        if length(find(LoggedData3(k,Variable_AE) == 0)) == 1
+        else
+            count_AE = count_AE + 1;
+            checksum = checksum + 1;
+        end
+        if length(find(LoggedData3(k,Variable_DE) == 0)) == 1
+        else
+            count_DE = count_DE + 1;
+            checksum = checksum + 1;
+        end
+        if length(find(LoggedData3(k,Variable_StartComp) == 0)) == 1
+        else
+            count_start = count_start + 1;
+            checksum = checksum + 1;
+        end
+        if length(find(abs(LoggedData3(k,Variable_Filtered_RPM_Dot)) < Lim_RPM_Dot)) == 1
+        else
+            count_rpmdot = count_rpmdot + 1;
+            checksum = checksum + 1;
+        end
+        if length(find(abs(LoggedData3(k,Variable_Filtered_TP_Dot)) < Lim_TP_Dot)) == 1
+        else
+            count_tpdot = count_tpdot + 1;  
+            checksum = checksum + 1;
+        end
+    % Filter based on proximity to Transient Conditions
+        if k > Transient_Offset && k < rows_LoggedData3 - Transient_Offset
+        else
+            count_offset = count_offset + 1;
+            checksum = checksum + 1;
+        end
+        if k < (rows_LoggedData - Transient_Offset) && k > Transient_Offset && isempty(find(LoggedData3(int16(k-Transient_Offset):int16(k+Transient_Offset),Variable_AE)...
+                > 0 | LoggedData3(int16(k-Transient_Offset):int16(k+Transient_Offset),Variable_DE) < 0, 1))
+            % need <> Transient_Offset so k stays positive integer or logical value
+        else
+            count_offset_AEDE = count_offset_AEDE + 1;
+            checksum = checksum + 1;
+        end
+        if k < (rows_LoggedData - Transient_Offset) && k > Transient_Offset && isempty(find(abs(LoggedData3(int16(k-Transient_Offset):int16(k+Transient_Offset),Variable_TP_Dot))...
+                > Lim_TP_Dot, 1))  % need <> Transient_Offset so k stays positive integer or logical value
+        else
+            count_offset_TP = count_offset_TP + 1;
+            checksum = checksum + 1;
+        end
+        % Add/NaN Data
+        if checksum == 0
+            LoggedData4(k,:) = LoggedData3(k,:);
+        else
+            LoggedData4(k,1:cols_LoggedData3) = nan;
+        end
     end
-    if length(find(LoggedData3(k,Variable_Lambda) >= Lim_Lambda(1) & LoggedData3(k,Variable_Lambda) <= Lim_Lambda(2))) == 1   
-    else
-        count_lambda = count_lambda + 1;
-        checksum = checksum + 1;
+elseif processFast == 1 %Use below for quicker computation but will not provide global filter counts
+    for k = 1:rows_LoggedData
+        if length(find(LoggedData3(k,Variable_RPM) >= Lim_RPM(1) & LoggedData3(k,Variable_RPM) <= Lim_RPM(2))) == 1
+            if length(find(LoggedData3(k,Variable_Lambda) >= Lim_Lambda(1) & LoggedData3(k,Variable_Lambda) <= Lim_Lambda(2))) == 1   
+                if length(find(LoggedData3(k,Variable_ET) >= Lim_EngineTemp(1) & LoggedData3(k,Variable_ET) <= Lim_EngineTemp(2))) == 1
+                    if length(find(LoggedData3(k,Variable_GFP) >= Lim_FuelPressure_Gauge(1) & LoggedData3(k,Variable_GFP) <= Lim_FuelPressure_Gauge(2))) == 1
+                        if length(find(LoggedData3(k,Variable_TP) >= Lim_TP(1) & LoggedData3(k,Variable_TP) <= Lim_TP(2))) == 1
+                            if length(find(LoggedData3(k,Variable_AE) == 0)) == 1
+                                if length(find(LoggedData3(k,Variable_DE) == 0)) == 1
+                                    if length(find(LoggedData3(k,Variable_StartComp) == 0)) == 1
+                                        if length(find(abs(LoggedData3(k,Variable_Filtered_RPM_Dot)) < Lim_RPM_Dot)) == 1
+                                            if length(find(abs(LoggedData3(k,Variable_Filtered_TP_Dot)) < Lim_TP_Dot)) == 1
+    %                                                 Filter based on proximity to Transient Conditions
+                                                if k > Transient_Offset && k < rows_LoggedData3 - Transient_Offset
+                                                    if isempty(find(LoggedData3(int16(k-Transient_Offset):int16(k+Transient_Offset),Variable_AE) > 0 | LoggedData3(int16(k-Transient_Offset):int16(k+Transient_Offset),Variable_DE) < 0, 1))
+                                                        if isempty(find(abs(LoggedData3(int16(k-Transient_Offset):int16(k+Transient_Offset),Variable_TP_Dot)) > Lim_TP_Dot, 1))
+                                                            LoggedData4(k,:) = LoggedData3(k,:);
+                                                        else
+                                                            LoggedData4(k,1:cols_LoggedData3) = nan;
+                                                            count_offset_TP = count_offset_TP + 1;
+                                                        end
+                                                    else
+                                                        LoggedData4(k,1:cols_LoggedData3) = nan;
+                                                        count_offset_AEDE = count_offset_AEDE + 1;
+                                                    end
+                                                else
+                                                    LoggedData4(k,1:cols_LoggedData3) = nan;
+                                                    count_offset = count_offset + 1;
+                                                end
+                                            else
+                                                LoggedData4(k,1:cols_LoggedData3) = nan;
+                                                count_tpdot = count_tpdot + 1;        
+                                            end
+                                        else
+                                            LoggedData4(k,1:cols_LoggedData3) = nan;
+                                            count_rpmdot = count_rpmdot + 1;
+                                        end
+                                    else
+                                        LoggedData4(k,1:cols_LoggedData3) = nan;
+                                        count_start = count_start + 1;
+                                    end
+                                else
+                                    LoggedData4(k,1:cols_LoggedData3) = nan;
+                                    count_DE = count_DE + 1;
+                                end
+                            else
+                                LoggedData4(k,1:cols_LoggedData3) = nan;
+                                count_AE = count_AE + 1;
+                            end
+                        else
+                            LoggedData4(k,1:cols_LoggedData3) = nan;
+                            count_tp = count_tp + 1;
+                        end
+                    else
+                        LoggedData4(k,1:cols_LoggedData3) = nan;
+                        count_gfp = count_gfp + 1;
+                    end
+                else
+                    LoggedData4(k,1:cols_LoggedData3) = nan;
+                    count_et = count_et + 1;                
+                end
+            else
+                LoggedData4(k,1:cols_LoggedData3) = nan;
+                count_lambda = count_lambda + 1;
+            end
+        else
+            LoggedData4(k,1:cols_LoggedData3) = nan;
+            count_rpm = count_rpm + 1;
+        end
     end
-    if length(find(LoggedData3(k,Variable_ET) >= Lim_EngineTemp(1) & LoggedData3(k,Variable_ET) <= Lim_EngineTemp(2))) == 1
-    else
-        count_et = count_et + 1;  
-        checksum = checksum + 1;
-    end
-    if length(find(LoggedData3(k,Variable_GFP) >= Lim_FuelPressure_Gauge(1) & LoggedData3(k,Variable_GFP) <= Lim_FuelPressure_Gauge(2))) == 1
-    else
-        count_gfp = count_gfp + 1;
-        checksum = checksum + 1;
-    end
-    if length(find(LoggedData3(k,Variable_TP) >= Lim_TP(1) & LoggedData3(k,Variable_TP) <= Lim_TP(2))) == 1
-    else
-        count_tp = count_tp + 1;
-        checksum = checksum + 1;
-    end
-    if length(find(LoggedData3(k,Variable_AE) == 0)) == 1
-    else
-        count_AE = count_AE + 1;
-        checksum = checksum + 1;
-    end
-    if length(find(LoggedData3(k,Variable_DE) == 0)) == 1
-    else
-        count_DE = count_DE + 1;
-        checksum = checksum + 1;
-    end
-    if length(find(LoggedData3(k,Variable_StartComp) == 0)) == 1
-    else
-        count_start = count_start + 1;
-        checksum = checksum + 1;
-    end
-    if length(find(abs(LoggedData3(k,Variable_Filtered_RPM_Dot)) < Lim_RPM_Dot)) == 1
-    else
-        count_rpmdot = count_rpmdot + 1;
-        checksum = checksum + 1;
-    end
-    if length(find(abs(LoggedData3(k,Variable_Filtered_TP_Dot)) < Lim_TP_Dot)) == 1
-    else
-        count_tpdot = count_tpdot + 1;  
-        checksum = checksum + 1;
-    end
-%                                                 Filter based on proximity to Transient Conditions
-    if k > Transient_Offset && k < rows_LoggedData3 - Transient_Offset
-    else
-        count_offset = count_offset + 1;
-        checksum = checksum + 1;
-    end
-    if k < (rows_LoggedData - Transient_Offset) && k > Transient_Offset && isempty(find(LoggedData3(int16(k-Transient_Offset):int16(k+Transient_Offset),Variable_AE)...
-            > 0 | LoggedData3(int16(k-Transient_Offset):int16(k+Transient_Offset),Variable_DE) < 0, 1))
-        % need <> Transient_Offset so k stays positive integer or logical value
-    else
-        count_offset_AEDE = count_offset_AEDE + 1;
-        checksum = checksum + 1;
-    end
-    if k < (rows_LoggedData - Transient_Offset) && k > Transient_Offset && isempty(find(abs(LoggedData3(int16(k-Transient_Offset):int16(k+Transient_Offset),Variable_TP_Dot))...
-            > Lim_TP_Dot, 1))  % need <> Transient_Offset so k stays positive integer or logical value
-    else
-        count_offset_TP = count_offset_TP + 1;
-        checksum = checksum + 1;
-    end
-    % Add/NaN Data
-    if checksum == 0
-        LoggedData4(k,:) = LoggedData3(k,:);
-    else
-        LoggedData4(k,1:cols_LoggedData3) = nan;
-    end
-end    
-
-%Use below for quicker computation but will not provide global filter counts
-% for k = 1:rows_LoggedData
-%     if length(find(LoggedData3(k,Variable_RPM) >= Lim_RPM(1) & LoggedData3(k,Variable_RPM) <= Lim_RPM(2))) == 1
-%         if length(find(LoggedData3(k,Variable_Lambda) >= Lim_Lambda(1) & LoggedData3(k,Variable_Lambda) <= Lim_Lambda(2))) == 1   
-%             if length(find(LoggedData3(k,Variable_ET) >= Lim_EngineTemp(1) & LoggedData3(k,Variable_ET) <= Lim_EngineTemp(2))) == 1
-%                 if length(find(LoggedData3(k,Variable_GFP) >= Lim_FuelPressure_Gauge(1) & LoggedData3(k,Variable_GFP) <= Lim_FuelPressure_Gauge(2))) == 1
-%                     if length(find(LoggedData3(k,Variable_TP) >= Lim_TP(1) & LoggedData3(k,Variable_TP) <= Lim_TP(2))) == 1
-%                         if length(find(LoggedData3(k,Variable_AE) == 0)) == 1
-%                             if length(find(LoggedData3(k,Variable_DE) == 0)) == 1
-%                                 if length(find(LoggedData3(k,Variable_StartComp) == 0)) == 1
-%                                     if length(find(abs(LoggedData3(k,Variable_Filtered_RPM_Dot)) < Lim_RPM_Dot)) == 1
-%                                         if length(find(abs(LoggedData3(k,Variable_Filtered_TP_Dot)) < Lim_TP_Dot)) == 1
-% %                                                 Filter based on proximity to Transient Conditions
-%                                             if k > Transient_Offset && k < rows_LoggedData3 - Transient_Offset
-%                                                 if isempty(find(LoggedData3(int16(k-Transient_Offset):int16(k+Transient_Offset),Variable_AE) > 0 | LoggedData3(int16(k-Transient_Offset):int16(k+Transient_Offset),Variable_DE) < 0, 1))
-%                                                     if isempty(find(abs(LoggedData3(int16(k-Transient_Offset):int16(k+Transient_Offset),Variable_TP_Dot)) > Lim_TP_Dot, 1))
-%                                                         LoggedData4(k,:) = LoggedData3(k,:);
-%                                                     else
-%                                                         LoggedData4(k,1:cols_LoggedData3) = nan;
-%                                                         count_offset_TP = count_offset_TP + 1;
-%                                                     end
-%                                                 else
-%                                                     LoggedData4(k,1:cols_LoggedData3) = nan;
-%                                                     count_offset_AEDE = count_offset_AEDE + 1;
-%                                                 end
-%                                             else
-%                                                 LoggedData4(k,1:cols_LoggedData3) = nan;
-%                                                 count_offset = count_offset + 1;
-%                                             end
-%                                         else
-%                                             LoggedData4(k,1:cols_LoggedData3) = nan;
-%                                             count_tpdot = count_tpdot + 1;        
-%                                         end
-%                                     else
-%                                         LoggedData4(k,1:cols_LoggedData3) = nan;
-%                                         count_rpmdot = count_rpmdot + 1;
-%                                     end
-%                                 else
-%                                     LoggedData4(k,1:cols_LoggedData3) = nan;
-%                                     count_start = count_start + 1;
-%                                 end
-%                             else
-%                                 LoggedData4(k,1:cols_LoggedData3) = nan;
-%                                 count_DE = count_DE + 1;
-%                             end
-%                         else
-%                             LoggedData4(k,1:cols_LoggedData3) = nan;
-%                             count_AE = count_AE + 1;
-%                         end
-%                     else
-%                         LoggedData4(k,1:cols_LoggedData3) = nan;
-%                         count_tp = count_tp + 1;
-%                     end
-%                 else
-%                     LoggedData4(k,1:cols_LoggedData3) = nan;
-%                     count_gfp = count_gfp + 1;
-%                 end
-%             else
-%                 LoggedData4(k,1:cols_LoggedData3) = nan;
-%                 count_et = count_et + 1;                
-%             end
-%         else
-%             LoggedData4(k,1:cols_LoggedData3) = nan;
-%             count_lambda = count_lambda + 1;
-%         end
-%     else
-%         LoggedData4(k,1:cols_LoggedData3) = nan;
-%         count_rpm = count_rpm + 1;
-%     end
-% end 
+end
 
 count_all = [count_AE; count_DE; count_et; count_gfp; count_lambda;...
     count_offset; count_offset_AEDE; count_tp; count_rpm; count_rpmdot;...
@@ -529,14 +531,15 @@ for k = 1:rows_LoggedData
         OverRunSamples(k,1:cols_LoggedData3) = nan;
     end
 end
+toc
 %%
 OverRunSamplesRanges = [];
 k = 1;
 while k < rows_LoggedData - 50
-    if length(find(isnan(OverRunSamples(k,Variable_RPM)))) == 0
+    if isempty(find(isnan(OverRunSamples(k,Variable_RPM)), 1))
         first = k;
         k = k+1;
-        while length(find(isnan(OverRunSamples(k,Variable_RPM)))) == 0
+        while isempty(find(isnan(OverRunSamples(k,Variable_RPM)), 1))
             k = k+1;
         end
         second = k;
@@ -548,431 +551,16 @@ end
 % plot(LoggedData3(1583:1595,Variable_Time),LoggedData3(1583:1595,Variable_Lambda))
 
 
-%%
-%Plot Settings
-fontsz = 8;
+%% Plots
+
 cd(dir_Main);
-
-hfig1 = figure('WindowStyle','normal');
-htabgroup = uitabgroup(hfig1);
-
-% Introduce Tab #1
-htab1 = uitab(htabgroup, 'Title', 'Fuel Table');
-hax1 = axes('Parent', htab1);
-
-%Plot Old Fuel Table
-subplot(2,4,1)
-surf(Fuelx(1:length(Fuelx)), Fuely(2:length(Fuely)), OldFuelTable3(2:length(Fuely),2:length(Fuelx)+1))
-set(gca, 'OuterPosition', [0.01, 0.6, 0.24, 0.4]) %[width_strt height_strt width height]
-title('Old Fuel Table')
-grid on
-xlabel('RPM')
-ylabel('MAP')
-zlabel('IJPU')
-
-%Plot New Fuel Table
-subplot(2,4,2)
-surf(Fuelx(1:length(Fuelx)), Fuely(2:length(Fuely)), NewFuelTable(2:length(Fuely),2:length(Fuelx)+1))
-set(gca, 'OuterPosition', [0.25, 0.6, 0.24, 0.4]) %[width_strt height_strt width height]
-title('New Fuel Table')
-grid on
-xlabel('RPM')
-ylabel('MAP')
-zlabel('IJPU')
-
-%Plot Diff Table
-TableDiff = NewFuelTable - OldFuelTable3;
-subplot(2,4,3)
-surf(Fuelx(1:length(Fuelx)), Fuely(2:length(Fuely)), TableDiff(2:length(Fuely),2:length(Fuelx)+1))
-set(gca, 'OuterPosition', [0.49, 0.6, 0.24, 0.4]) %[width_strt height_strt width height]
-title('New Minus Old')
-grid on
-xlabel('RPM')
-ylabel('MAP')
-zlabel('IJPU')
-
-%Plot Sample Table
-subplot(2,4,4)
-surf(Fuelx(1:length(Fuelx)), Fuely(2:length(Fuely)), SampleCountTable(2:length(Fuely),2:length(Fuelx)+1))
-set(gca, 'OuterPosition', [0.73, 0.6, 0.25, 0.4]) %[width_strt height_strt width height]
-title('Sample Count')
-grid on
-xlabel('RPM')
-ylabel('MAP')
-zlabel('Samples')
-
-
-%Plot Data Log
-subplot(2,4,[5 6 7 8]) % This creates blank plot behind real plot
-% Currently not using ylabels
-ylabels{1}='RPM';
-ylabels{2}='RPM';
-ylabels{3}='Throttle Position';
-ylabels{4}='Throttle Position';
-time_constant_throttle = LoggedData3(rows_LoggedData4,1);
-% Use below for original plot using plotyyy function
-% plotyyy(LoggedData3(:,Variable_Time),LoggedData3(:,Variable_Filtered_RPM),PassThroughData(:,Variable_Time),PassThroughData(:,Variable_Filtered_RPM),LoggedData3(:,Variable_Time),LoggedData3(:,Variable_TP),PassThroughData(:,Variable_Time),PassThroughData(:,Variable_TP),ylabels,time_constant_throttle);
-
-plot_primary = 2;
-plot_secondary = 2;
-[axh, hLine1, hLine2] = plotyy(LoggedData3(:,Variable_Time),LoggedData3(:,Variable_Filtered_RPM), LoggedData3(:,Variable_Time),LoggedData3(:,Variable_TP));
-hLine1.LineWidth = plot_primary;
-hLine2.LineWidth = plot_primary;
-color_prim_rpm = [0 0 0.8]; % Dark Blue
-color_prim_tp = [0.5 0.2 0.6]; % Purple
-color_second_rpm = [0.5 1 0]; % Lime Green
-color_second_tp = [1 1 0]; % Yellow
-color_yline_rpm = [1 0 0]; % Red
-color_yline_tp = [1 0.85 .78]; % Tan
-set(hLine1, 'color', color_prim_rpm);
-set(hLine2, 'color', color_prim_tp);
-for i = 2000:2000:14000
-    yline(i,':','LineWidth',1,'Color',color_yline_tp);
-    
-end
-% fighandles = findall( allchild(0), 'type', 'figure');
-% fig = fighandles(1);   %or as appropriate
-% allaxes = findall(fig, 'type', 'axes');
-set(axh(1),'YLim',[-15000 15000], 'YColor', color_prim_rpm)
-set(axh(1),'YTick',[000:2000:14000])
-yt=get(axh(1),'YTick');
-set(axh(1),'YTickLabel',sprintf('%1.0f\n',yt))
-set(axh(1),'ycolor', color_prim_rpm) % OR below
-% axh(1).YAxis(1).Color = color_prim_rpm;
-set(axh(2),'YLim',[0 200])
-set(axh(2),'YTick',[0:20:100])
-yt=get(axh(2),'YTick');
-set(axh(2),'YTickLabel',sprintf('%1.0f\n',yt))
-set(axh(2),'ycolor',color_prim_tp)
-title('Logged Data')
-xlabel('Time (s)')
-ylabel(axh(1),'RPM', 'Units', 'Normalized', 'Position', [-0.035, 0.73, 0]); % Normalized x,y,z location
-% ylabel(axh(2),'Throttle Position','rotation', 270,'HorizontalAlignment','left','VerticalAlignment','bottom')
-ylabel(axh(2),'Throttle Position', 'rotation', 270, 'Units', 'Normalized', 'Position', [1.0375, 0.2475, 0]); % Normalized x,y,z location
-hold(axh(1), 'on');
-hLine3 = plot(PassThroughData(:,Variable_Time),PassThroughData(:,Variable_Filtered_RPM));
-hLine3.LineWidth = plot_secondary;
-set(hLine3, 'color', color_second_rpm)
-hold(axh(2), 'on');
-hLine4 = plot(axh(2),PassThroughData(:,Variable_Time),PassThroughData(:,Variable_Filtered_TP));
-hLine4.LineWidth = plot_secondary;
-set(hLine4, 'color', color_second_tp);
-%y-grid throttle position
-for i = 20:20:100
-    yline(axh(2),i, ':', 'LineWidth', 1, 'Color', [0 0.5 0]);
-end
-%x-grid entire graph
-plot_xgrid_interval = 50;
-plot_xgrid_numberspacings = max(LoggedData3(:,1))/plot_xgrid_interval;
-plot_xgrid_numberspacings = ceil(plot_xgrid_numberspacings); % Round to largest integer
-for i = 1:1:plot_xgrid_numberspacings
-    xlines = xline(50*i,'--', 'LineWidth', 0.5, 'Color', 'w');
-end
-
-% Set Background and Position
-set(gca,'Color','k')
-set(gca, 'OuterPosition', [-0.09, -0.025, 1.1375, 0.6]) %[width_strt height_strt width height]
-
-% Introduce Tab #2
-htab2 = uitab(htabgroup, 'Title', 'IJPU Convergence');
-hax2 = axes('Parent', htab2);
-% Plot Convergence Table
-floor = 20;
-count = 0;
-for i = 2:length(Fuelx)
-    for j = 1:length(Fuely)
-        DataMatrix = Data_Table{j,i,2};
-        Size_DataMatrix = size(DataMatrix);
-        rows_DataMatrix = Size_DataMatrix(1);
-        if rows_DataMatrix > floor
-            count = count + 1;
-        end
+mFiles = dir('*.m');
+numFiles = length(mFiles);
+for i = 1:numFiles 
+    if contains(mFiles(i).name,'Tab_')
+        run(mFiles(i).name)
     end
 end
-
-n = sqrt(count);
-n = n+0.5;
-n = round(n,0);
-subplotcounter = 1;
-for i = 2:length(Fuelx)
-    for j = 1:length(Fuely)
-        DataMatrix = Data_Table{j,i,2};
-        Size_DataMatrix = size(DataMatrix);
-        rows_DataMatrix = Size_DataMatrix(1);
-            if rows_DataMatrix > floor
-                subplot(n,n,subplotcounter)
-                plot(1:rows_DataMatrix,DataMatrix(:,1),1:rows_DataMatrix,DataMatrix(:,3));
-                name_title = char(strcat(num2str(Fuelx(i-1)),{' '},{'rpm'},{' '},num2str(Fuely(j)),{' '},{'bar'}));
-                title(name_title)
-                subplotcounter = subplotcounter + 1;
-                grid on
-            end
-    end
-end
-
-% Introduce Tab #3
-htab3 = uitab(htabgroup, 'Title', 'Lambda');
-hax3 = axes('Parent', htab3);
-
-plot_borderwidth = 2;
-
-% %Data Table
-% %Get position of subplot and use coordinates to place table
-% %Does not work
-% hf = figure;
-% ha = subplot(2,4,1);
-% pos = get(ha,'Position');
-% un = get(ha,'Units');
-% delete(ha)
-% dat =  {'        Throttle Position', mean(LoggedData3(2:end-1, Variable_TP)), min(LoggedData3(2:end-1, Variable_TP)), max(LoggedData3(2:end-1, Variable_TP));...
-%         '        RPM', mean(LoggedData3(2:end-1, Variable_RPM)), min(LoggedData3(2:end-1, Variable_RPM)), max(LoggedData3(2:end-1, Variable_RPM));...   
-%         '        MAP', mean(LoggedData3(2:end-1, Variable_MAP)), min(LoggedData3(2:end-1, Variable_MAP)), max(LoggedData3(2:end-1, Variable_MAP));...
-%         '        Lamdba',  mean(LoggedData3(2:end-1, Variable_TP)), min(LoggedData3(2:end-1, Variable_TP)), max(LoggedData3(2:end-1, Variable_TP));...
-%         '        Engine Temp', mean(LoggedData3(2:end-1, Variable_ET)), min(LoggedData3(2:end-1, Variable_ET)), max(LoggedData3(2:end-1, Variable_ET));...
-%         '        Oil Temp', mean(LoggedData3(2:end-1, Variable_OT)),min(LoggedData3(2:end-1, Variable_OT)),max(LoggedData3(2:end-1, Variable_OT));};
-% columnname =   {'Channel', 'Average', 'Min', 'Max'};
-% columnformat = {'char', 'char', 'char', 'char'}; 
-% t = uitable('Units','normalized','Position',...
-%             pos, 'Data', dat,... 
-%             'ColumnName', columnname,...
-%             'ColumnFormat', columnformat,...
-%             'RowName',[]);
-% set(t,'ColumnWidth',{150, 100, 50, 50})
-
-
-%Plot Lambda Histogram
-subplot(2,4,1)
-edges_lambda = [0.5 0.5:0.05:1.5 1.5]; % 5.211 is max value LSU 4.9 provides
-graph_hist_lambda = histogram(LoggedData3(:,Variable_Lambda),edges_lambda);
-% hist_lambda.Normalization = 'countdensity';
-% yt = get(gca,'YTick');
-% set(gca,'YTickLabel',sprintf('%1.0f\n',yt));
-% curtick = get(gca, 'YTick');
-% set(gca, 'YTickLabel', cellstr(num2str(curtick(:))));
-ax = gca;
-ax.YRuler.Exponent = 0;
-grid on
-% title('Lambda Count Density')
-xlabel('Lambda')
-ylabel('Count')
-ax.XRuler.Axle.LineWidth = plot_borderwidth;
-ax.YRuler.Axle.LineWidth = plot_borderwidth;
-
-%Plot Lambda vs Lambda Target
-subplot(2,4,[5 8])
-graph_plot_lambda = plot(LoggedData3(:,Variable_Time),LoggedData3(:,Variable_Lambda),...
-    LoggedData3(:,Variable_Time),LoggedData3(:,Variable_LambdaAim));
-graph_plot_lambda(1).LineWidth = 0.25;
-graph_plot_lambda(2).LineWidth = 0.5;
-set(gca,'YLim',[0.6 2])
-grid on
-% title('Lambda Count Density')
-xlabel('Time (s)')
-ylabel('Lambda')
-ax.XRuler.Axle.LineWidth = plot_borderwidth;
-ax.YRuler.Axle.LineWidth = plot_borderwidth;
-% c = get(graph_plot_lambda,'Color'); % Get graph colors
-set(gca, 'Color', 'k')
-legend('\color[rgb]{0 0.447 0.741} Lambda Aim','\color{red} Lambda Desired', 'Location', 'SouthEast')
-
-%Plot Over Run Fuel Cuts
-subplot(2,4,[2 4])
-[axh, hLine1, hLine2] = plotyy(OverRunSamples(:,Variable_Time),LoggedData3(:,Variable_RPM),OverRunSamples(:,Variable_Time),LoggedData3(:,Variable_Lambda));
-set(axh(1), 'ycolor', 'k')
-set(axh(2),'ycolor', 'k')
-graph_drivprof_LineWidth = 2;
-set(hLine1, 'LineWidth', graph_drivprof_LineWidth);
-set(hLine2, 'LineWidth', graph_drivprof_LineWidth);
-set(hLine1,'color', 'b');
-set(hLine2,'color', 'c');
-title('Over-Run Fuel Cuts')
-xlabel('Time (s)')
-ylabel('RPM')
-ylabel(axh(2),'Lambda', 'rotation', 270, 'HorizontalAlignment','center','VerticalAlignment','bottom');
-hold(axh(1), 'on');
-% hLine3 = plot(LoggedData3(:,Variable_Time),LoggedData3(:,Variable_OT));
-% hLine3.LineWidth = graph_temps_LineWidth;
-% set(hLine3, 'color', 'r')
-grid on
-legend('RPM', 'MAP', 'Location', 'SouthEast')
-%Set Border Width
-ax = gca;
-ax.XRuler.Axle.LineWidth = plot_borderwidth;
-ax.YRuler.Axle.LineWidth = plot_borderwidth;
-
-% Introduce Tab #4
-htab4 = uitab(htabgroup, 'Title', 'Temperature');
-hax4 = axes('Parent', htab4);
-
-%Plot RPM and MAP
-subplot(2,4,[1 4])
-[axh, hLine1, hLine2] = plotyy(LoggedData3(:,Variable_Time),LoggedData3(:,Variable_RPM),LoggedData3(:,Variable_Time),LoggedData3(:,Variable_MAP));
-set(axh(1), 'ycolor', 'k')
-set(axh(2),'ycolor', 'k')
-graph_rpmmap_LineWidth = 2;
-set(hLine1, 'LineWidth', 1);
-set(hLine2, 'LineWidth', 1);
-set(hLine1,'color', 'r');
-set(hLine2,'color', 'b');
-xlabel('Time (s)')
-ylabel(axh(1),'RPM','HorizontalAlignment','left','VerticalAlignment','bottom');
-ylabel(axh(2),'Pressure (bar)', 'rotation', 270, 'HorizontalAlignment','left','VerticalAlignment','bottom');
-set(axh(1),'YLim',[-15000 15000], 'YColor', 'k')
-set(axh(1),'YTick',[000:2000:14000])
-set(axh(2),'YLim',[0 2], 'YColor', 'k')
-set(axh(2),'YTick',[0:0.2:1])
-yt=get(axh(1),'YTick');
-set(axh(1),'YTickLabel',sprintf('%1.0f\n',yt))
-grid(axh(2), 'on')
-
-% hold(axh(1), 'on');
-% hLine3 = plot(LoggedData3(:,Variable_Time),LoggedData3(:,Variable_OT));
-% hLine3.LineWidth = graph_rpmmap_LineWidth;
-% set(hLine3, 'color', 'r')
-grid on
-legend('RPM', 'MAP', 'Location', 'SouthEast')
-%Set Border Width
-ax = gca;
-ax.XRuler.Axle.LineWidth = plot_borderwidth;
-ax.YRuler.Axle.LineWidth = plot_borderwidth;
-
-%Plot Temperatures
-subplot(2,4,[5 6 7 8])
-[axh, hLine1, hLine2] = plotyy(LoggedData3(:,Variable_Time),LoggedData3(:,Variable_ET),LoggedData3(:,Variable_Time),LoggedData3(:,Variable_FT));
-set(axh(1), 'ycolor', 'k')
-set(axh(2),'ycolor', 'k')
-graph_temps_LineWidth = 2;
-set(hLine1, 'LineWidth', graph_temps_LineWidth);
-set(hLine2, 'LineWidth', graph_temps_LineWidth);
-set(hLine1,'color', 'b');
-set(hLine2,'color', [0.39216 0.83137 0.07451]);
-xlabel('Time (s)')
-ylabel('Temperature (C)')
-ylabel(axh(2),'Temperature (C)', 'rotation', 270, 'HorizontalAlignment','center','VerticalAlignment','bottom');
-hold(axh(1), 'on');
-hLine3 = plot(LoggedData3(:,Variable_Time),LoggedData3(:,Variable_OT));
-hLine3.LineWidth = graph_temps_LineWidth;
-set(hLine3, 'color', 'r')
-hLine4 = yline(Lim_EngineTemp(2), ':', 'LineWidth', 2, 'Color', [0.65 0.65 0.65]);
-set(axh(1),'YLim',[0 ceil(max(max(LoggedData3(:,[Variable_ET Variable_OT])))/20)*20*1.1])
-set(axh(2),'YLim',[0 max(max(LoggedData3(:,[Variable_FT])))*1.1])
-set(axh(1),'YTick',[0:20:ceil(max(max(LoggedData3(:,[Variable_ET Variable_OT])))/20)*20])
-set(axh(2),'YTick',[0:10:ceil(max(max(LoggedData3(:,[Variable_FT])))/10)*10])
-set(axh(1),'Box','off')
-hAx(2).XAxis.Visible = 'on';
-topline = refline(axh(1),0,axh(1).YLim(2));
-topline.LineWidth = 2;
-topline.Color = 'k';
-axh(1).YAxis.LineWidth = 2;
-axh(2).YAxis.LineWidth = 2;
-grid on
-ax = gca;
-ax.GridAlpha = 1;  % 0 = Transparent 1 = Opaque
-ax.GridLineStyle = ':';
-legend([hLine1 hLine3 hLine2 hLine4], 'Water', 'Oil', 'Fuel', 'Water Threshold', 'Location', 'SouthEast')
-%Set Border Width
-ax = gca;
-ax.XRuler.Axle.LineWidth = plot_borderwidth;
-ax.YRuler.Axle.LineWidth = plot_borderwidth;
-
-
-% Introduce Tab #5
-htab5 = uitab(htabgroup, 'Title', 'Fuel Efficiency');
-hax5 = axes('Parent', htab5);
-
-%Plot Default Filter Counts
-cd(dir_Log);
-A = readtable(logfilename);
-Data = A.Variables;
-Names = A.Properties.VariableNames;
-rows = size(Data);
-rows = rows(1,1);
-cols = size(Data);
-cols = cols(1,2);
-
-FormattedData = [];
-for i = 1:cols
-    Name = Names{i}; %Store name of each column in array
-    FormattedData(:,i) = str2double(Data(:,i)); %Convert table to array
-end
-
-Time = find(strcmpi(A.Properties.VariableNames,'Time')); %Finds column of time data
-RPM = find(strcmpi(A.Properties.VariableNames,'EngineRPM')); %Finds column of rpm data
-FEPW = find(strcmpi(A.Properties.VariableNames,'FuelEffectivePW')); %Finds column of fuel data
-SPS = 1/(FormattedData(5,Time)-FormattedData(4,Time)); %Sampling frequency
-
-MPG = [zeros(rows,1)];
-if FEPW ~= 0
-    FormattedData(:, cols+1) = FormattedData(:,RPM)/60/2/SPS.*FormattedData(:,FEPW)/1000/60*220/1000*4; %Fuel usage in liters per sample
-    FormattedData = [FormattedData zeros(rows,1)]; %Sets up zeros column at end of array
-    for a = 2:rows
-        if FormattedData(a,Variable_Lambda) < 5.2 %Set variable for max lambda reading
-            FormattedData(a,cols+2) = double(FormattedData(a-1,cols+2)) + double(FormattedData(a, cols+1));
-        else % Do NOT add calculated fuel usage
-            FormattedData(a,cols+2) = double(FormattedData(a-1,cols+2));
-        end
-        if FormattedData(a,Variable_RPM) > 1500 && FormattedData(a,Variable_WSSFL) > 1
-            consumption = FormattedData(a,cols+1) * 60 * SPS; % liters/hour
-            speed = (Variable_WSSFL/1.6); % miles/hour
-            fuelecon = speed / consumption / 3.785; % miles/gallon
-            MPG(a,1) = fuelecon;
-        end
-    end
-%     set(gcf, 'position', [10 50 1400 0750]);
-else
-    disp('Error: Fuel pulse width not logged. Adjust data logging parameters to include FEPW.')
-end
-cd(dir_Main);
-subplot(3,3,[1 3])
-plot(FormattedData(:,Time), FormattedData(:,cols+2));
-title('Time vs Fuel Used');
-xlabel('Time')
-ylabel('Fuel Used')
-grid on
-subplot(3,3,[4 6])
-plot(FormattedData(:,Time), MPG(:,1));
-title('Time vs Fuel Economy');
-xlabel('Time')
-ylabel('Fuel Economy (MPG)')
-ylim([0 100])
-grid on
-subplot(3,3,[7 9])
-plot(FormattedData(:,Time), FormattedData(:, RPM));
-title('Time vs RPM');
-xlabel('Time')
-ylabel('RPM')
-grid on
-
-% Introduce Tab #6
-htab6 = uitab(htabgroup, 'Title', 'Statistics');
-hax6 = axes('Parent', htab6);
-
-%Plot Default Filter Counts
-subplot(2,2,1)
-% Create loop to make below be dynamic
-count_default = [935; 538; 1658; 1972; 19; 11; 4517; 18; 2469; 11666; 2284; 18; 1359];
-bar(count_default');
-title('Default Filters')
-% count_names = {'count_AE'; 'count_DE'; 'count_et'; 'count_gfp'; 'count_lambda';...
-%     'count_offset'; 'count_offset_AEDE'; 'count_tp'; 'count_rpm'; 'count_rpmdot';...
-%     'count_start'; 'count_tp'; 'count_tpdot'};
-% set(gca,'TickLabelInterpreter','none')
-count_names = {'count\_AE'; 'count\_DE'; 'count\_et'; 'count\_gfp'; 'count\_lambda';...
-    'count\_offset'; 'count\_offset\_AEDE'; 'count\_tp'; 'count\_rpm'; 'count\_rpmdot';...
-    'count\_start'; 'count\_tp'; 'count\_tpdot'}; % Or use above 2
-set(gca,'xticklabel',count_names);
-xtickangle(90)
-grid on
-
-% Plot User Filter Counts
-subplot(2,2,2)
-bar(count_all');
-title('Basic Filters')
-set(gca,'xticklabel',count_names);
-xtickangle(90)
-grid on
-
-
 
 % Remove and replace with fill screen / autosize
 % set(gcf, 'position', [1 42 1600 750]);
