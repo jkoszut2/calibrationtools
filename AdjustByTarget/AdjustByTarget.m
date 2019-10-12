@@ -1,25 +1,25 @@
 %% Calculations
 %IJPU Table Size
-tableijpudatasize = size(Table_IJPU);
-cols_Table_IJPU = tableijpudatasize(1,2);
-rows_Table_IJPU = tableijpudatasize(1,1);
+size_tableijpudatasize = size(Table_IJPU);
+size_cols_Table_IJPU = size_tableijpudatasize(1,2);
+size_rows_Table_IJPU = size_tableijpudatasize(1,1);
 %Target Table Size
-tabletargetdatasize = size(Table_Target_Original);
-cols_Table_Target = tabletargetdatasize(1,2);
-rows_Table_Target = tabletargetdatasize(1,1);
+size_tabletargetdatasize = size(Table_Target_Original);
+size_cols_Table_Target = size_tabletargetdatasize(1,2);
+size_rows_Table_Target = size_tabletargetdatasize(1,1);
 
-%Cell to Double
+%Cell to Double for All Input Tables
 Table_IJPU_double = [];
 Table_Target_Original_double = [];
 Table_Target_New_double = [];
-for i = 1:cols_Table_Target-1
-    for j = 1:rows_Table_Target
+for i = 1:size_cols_Table_Target-1 %Do not iterate over empty last column
+    for j = 1:size_rows_Table_Target
         Table_Target_Original_double(j,i) = cell2mat(Table_Target_Original(j,i));
         Table_Target_New_double(j,i) = cell2mat(Table_Target_New(j,i));
     end
 end
-for i = 1:cols_Table_IJPU-1
-    for j = 1:rows_Table_IJPU-2
+for i = 1:size_cols_Table_IJPU-1 %Do not iterate over empty last column
+    for j = 1:size_rows_Table_IJPU-2 %Do not iterate over empty last two rows
         Table_IJPU_double(j,i) = cell2mat(Table_IJPU(j,i));
     end
 end
@@ -37,7 +37,7 @@ rows_Table_Target_new = tabletargetdatasizenew(1,1);
 Targetx = Table_IJPU_double(1,10:cols_Table_IJPU_new);    
 Targety = Table_IJPU(6:rows_Table_IJPU_new,1)';
 %Original Target
-gridd = Table_Target_Original_double(2:12,2:end);
+gridd = Table_Target_Original_double(2:12,2:end); % Skip "0" origin
 colsinput = repelem(Table_Target_Original_double(1,2:cols_Table_Target_new), [rows_Table_Target_new-1], [1]);
 rowsinput = repelem(Table_Target_Original_double(2:rows_Table_Target_new,1), [1], [cols_Table_Target_new-1]);
 colsinput2 = repelem(Table_IJPU_double(1,10:cols_Table_IJPU_new), length(Table_IJPU_double(6:rows_Table_IJPU_new,1)), [1]);
