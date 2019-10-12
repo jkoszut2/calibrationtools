@@ -263,6 +263,7 @@ if processFast ~=1
             checksum = checksum + 1;
         end
     % Filter based on proximity to Transient Conditions
+        % Check static offset to ensure calculations possible
         if k > Transient_Offset && k < rows_LoggedData3 - Transient_Offset
         else
             count_offset = count_offset + 1;

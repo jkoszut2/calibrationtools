@@ -93,7 +93,9 @@ set(axh(2),'YTick',[0:20:100])
 yt=get(axh(2),'YTick');
 set(axh(2),'YTickLabel',sprintf('%1.0f\n',yt))
 set(axh(2),'ycolor',color_prim_tp)
-title('Logged Data')
+titlename = strcat('Logged Data -', {' '}, logfilename);
+title(titlename, 'Interpreter', 'none')
+clear titlename
 xlabel('Time (s)')
 ylabel(axh(1),'RPM', 'Units', 'Normalized', 'Position', [-0.035, 0.73, 0]); % Normalized x,y,z location
 % ylabel(axh(2),'Throttle Position','rotation', 270,'HorizontalAlignment','left','VerticalAlignment','bottom')

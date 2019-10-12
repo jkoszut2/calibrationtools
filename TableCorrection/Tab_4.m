@@ -45,8 +45,8 @@ set(hLine2, 'LineWidth', graph_temps_LineWidth);
 set(hLine1,'color', 'b');
 set(hLine2,'color', [0.39216 0.83137 0.07451]);
 xlabel('Time (s)')
-ylabel('Temperature (C)')
-ylabel(axh(2),'Temperature (C)', 'rotation', 270, 'HorizontalAlignment','center','VerticalAlignment','bottom');
+ylabel('Oil & Water Temperature (C)')
+ylabel(axh(2),'Fuel Temperature (C)', 'rotation', 270, 'HorizontalAlignment','center','VerticalAlignment','bottom');
 hold(axh(1), 'on');
 hLine3 = plot(LoggedData3(:,Variable_Time),LoggedData3(:,Variable_OT));
 hLine3.LineWidth = graph_temps_LineWidth;
@@ -58,9 +58,10 @@ set(axh(1),'YTick',[0:20:ceil(max(max(LoggedData3(:,[Variable_ET Variable_OT])))
 set(axh(2),'YTick',[0:10:ceil(max(max(LoggedData3(:,[Variable_FT])))/10)*10])
 set(axh(1),'Box','off')
 hAx(2).XAxis.Visible = 'on';
-topline = refline(axh(1),0,axh(1).YLim(2));
-topline.LineWidth = 2;
-topline.Color = 'k';
+% topline command not working - October 11, 2019
+% topline = refline(axh(1),0,axh(1).YLim(2));
+% topline.LineWidth = 2;
+% topline.Color = 'k';
 axh(1).YAxis.LineWidth = 2;
 axh(2).YAxis.LineWidth = 2;
 grid on

@@ -17,7 +17,7 @@ catch ME
     error('>> Script terminated.');
 end
 
-dir_Fuel = '..\TableCorrection\FuelTables';
+dir_Fuel = '..\Logs';
 
 try
     cd(dir_Fuel);
@@ -30,7 +30,7 @@ catch ME
 end
 
 cd(dir_Main);
-dir_Log = '..\TableCorrection\Logs';
+dir_Log = '..\Logs\106motecdata';
 
 try
     cd(dir_Log);

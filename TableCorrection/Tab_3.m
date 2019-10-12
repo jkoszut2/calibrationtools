@@ -82,7 +82,7 @@ hold(axh(1), 'on');
 % hLine3.LineWidth = graph_temps_LineWidth;
 % set(hLine3, 'color', 'r')
 grid on
-legend('RPM', 'MAP', 'Location', 'SouthEast')
+legend('RPM', 'Lambda', 'Location', 'SouthEast')
 %Set Border Width
 ax = gca;
 ax.XRuler.Axle.LineWidth = plot_borderwidth;
