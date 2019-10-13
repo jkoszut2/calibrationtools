@@ -1,14 +1,18 @@
 # Calibration Tools
 ## Table Correction
+### October 13, 2019
+Added log concatenator  
+Added sample data  
+
 ### October 11, 2019 - 1.1.3
-Added run script
-Added filter behavior tab
+Added run script  
+Added filter behavior tab  
 
 ### August 8, 2019 - 1.1.2
 Implemented individual configuration files for each tab
 
 ### July 28, 2019 - 1.1.1
-Fixed temperature plot y-axis limits and ticks references to improve graph robustness as well as adding water temperature threshold
+Fixed temperature plot y-axis limits and ticks references to improve graph robustness as well as adding water temperature threshold  
 
 Added Fuel Consumption tab (Fuel Consumption vs Time, Fuel Economy vs Time, and RPM vs Time) 
   
