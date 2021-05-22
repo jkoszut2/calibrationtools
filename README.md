@@ -1,4 +1,8 @@
 # Calibration Tools
+![Settings Window](https://raw.github.com/jkoszut2/calibrationtools/master/Example1.png)
+
+![Settings Window](https://raw.github.com/jkoszut2/calibrationtools/master/Example2.png)
+
 ## Table Correction
 ### October 13, 2019
 Added log concatenator  
